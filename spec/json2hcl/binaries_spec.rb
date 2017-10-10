@@ -1,4 +1,3 @@
-# require 'digest'
 require 'json2hcl/version'
 require 'spec_helper'
 

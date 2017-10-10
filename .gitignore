@@ -1,0 +1,13 @@
+# RubyGems
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/pkg/
+/spec/reports/
+/tmp/
+/vendor/
+**/*.gem
+
+# rspec failure tracking
+.rspec_status

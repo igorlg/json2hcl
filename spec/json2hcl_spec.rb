@@ -12,6 +12,7 @@ describe Json2hcl do
 
     let(:subject)   { Class.new { extend ::Json2hcl } }
     let(:gem_root)  { File.expand_path('..', __dir__) }
+    let(:bin_root)  { File.join(gem_root, 'lib', 'json2hcl', 'bin') }
     let(:version)   { Json2hcl::VERSION }
 
     it '.os should return "darwin"' do
@@ -20,6 +21,11 @@ describe Json2hcl do
 
     it '.arch should return "amd64"' do
       expect(subject.arch).to eq 'amd64'
+    end
+
+    # it ".json2hcl should return full path to '<gem_root>/lib/bin/json2hcl_v#{version}_darwin_amd64'" do
+    it ".json2hcl should return full path to json2hcl binary" do
+      expect(subject.json2hcl).to eq "#{bin_root}/json2hcl_v#{version}_darwin_amd64"
     end
   end
 

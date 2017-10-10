@@ -3,10 +3,11 @@ require 'json2hcl/version'
 require 'os'
 
 module Json2hcl
-  # def json2hcl
-  #   bin = "json2hcl_v#{VERSION}_#{os}_#{arch}"
-  #   File.expand_path(File.join('json2hcl', bin), __dir__)
-  # end
+  def json2hcl
+    file = "json2hcl_v#{VERSION}_#{os}_#{arch}"
+    file += '.exe' if OS.windows?
+    File.expand_path(File.join('json2hcl', 'bin', file), __dir__)
+  end
 
   # private
 

@@ -7,6 +7,12 @@ module Json2hcl
     end
   end
 
+  class InvalidJSONError < StandardError
+    def initialize(msg='Invalid JSON')
+      super
+    end
+  end
+
   class InvalidFileError < StandardError
     def initialize(msg='Invalid path to file')
       super

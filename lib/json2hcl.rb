@@ -2,6 +2,7 @@ require 'json2hcl/version'
 require 'json2hcl/os'
 
 require 'tempfile'
+require 'open3'
 
 module Json2hcl
   def self.binfile
@@ -11,19 +12,43 @@ module Json2hcl
   end
 
   def self.to_json(data)
-    # TODO: REFACTOR THIS!
     if File.file?(data)
-      jsonstr = `#{binfile} -reverse 2>&1 < #{data}`
-      raise Json2hcl::InvalidHCLError unless $?.exitstatus == 0
+      begin
+        jsonstr = cmd(data, true)
+      rescue CommandExecutionError
+        raise InvalidHCLError
+      end
     else
+      # TODO: REFACTOR THIS!
       f = ::Tempfile.new
       f.write(data)
       f.close
-      jsonstr = `#{binfile} -reverse 2>&1 < #{f.path}`
-      f.unlink
-      raise Json2hcl::InvalidHCLError unless $?.exitstatus == 0
+
+      begin
+        jsonstr = cmd(f.path, true)
+      rescue CommandExecutionError
+        raise InvalidHCLError
+      ensure
+        f.unlink
+      end
     end
 
     return jsonstr
+  end
+
+  def self.cmd(data, reverse=false)
+    raise ArgumentError     unless [true, false].include? reverse
+    raise InvalidFileError  unless Pathname.new(data).absolute?
+
+    cmd = binfile
+    cmd += ' -reverse' if reverse
+    cmd += ' 2>&1'
+    cmd += " < #{data}"
+
+    stdout = `#{cmd}`
+    # puts cmd
+    raise CommandExecutionError unless $?.exitstatus == 0
+
+    return stdout
   end
 end

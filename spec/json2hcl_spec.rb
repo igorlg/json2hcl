@@ -16,6 +16,16 @@ describe Json2hcl do
     @subject  = ::Json2hcl
   end
 
+  let(:valid_hcl_file)    { File.expand_path(File.join('assets', 'hcl', 'full.hcl'), __dir__) }
+  let(:valid_hcl_string)  { File.read(valid_hcl_file) }
+  let(:valid_json_file)   { File.expand_path(File.join('assets', 'json', 'full.json'), __dir__) }
+  let(:valid_json_string) { File.read(valid_json_file) }
+
+  let(:invalid_hcl_file)    { File.expand_path(File.join('assets', 'hcl', 'invalid.hcl'), __dir__) }
+  let(:invalid_hcl_string)  { File.read(invalid_hcl_file) }
+  let(:invalid_json_file)   { File.expand_path(File.join('assets', 'json', 'invalid.json'), __dir__) }
+  let(:invalid_json_string) { File.read(invalid_json_file) }
+
   describe '.binfile' do
     it 'should return the full path to the json2hcl bin file' do
       f = @subject.binfile
@@ -34,22 +44,24 @@ describe Json2hcl do
   end
 
   describe '.to_json' do
-    let(:valid_hcl_file)    { File.expand_path(File.join('assets', 'hcl', 'full.hcl'), __dir__) }
-    let(:valid_hcl_string)  { File.read(valid_hcl_file) }
-    let(:valid_json_file)   { File.expand_path(File.join('assets', 'json', 'full.json'), __dir__) }
-    let(:valid_json_string) { File.read(valid_json_file) }
-
-    let(:invalid_hcl_file)    { File.expand_path(File.join('assets', 'hcl', 'invalid.hcl'), __dir__) }
-    let(:invalid_hcl_string)  { File.read(invalid_hcl_file) }
-    let(:invalid_json_file)   { File.expand_path(File.join('assets', 'json', 'invalid.json'), __dir__) }
-    let(:invalid_json_string) { File.read(invalid_json_file) }
-
     it 'takes only one argument' do
       aggregate_failures 'inputs for to_json' do
         expect { @subject.to_json }.to raise_error ArgumentError
         expect { @subject.to_json('') }.to_not raise_error
         expect { @subject.to_json('', '') }.to raise_error ArgumentError
       end
+    end
+
+    it 'calls Json2hcl.cmd instead of using `` when passing string to to_json' do
+      expect(@subject).to_not receive(:`)
+      expect(@subject).to receive(:cmd).with(anything, true)
+      @subject.to_json(valid_hcl_string)
+    end
+
+    it 'calls Json2hcl.cmd instead of using `` when passing file to to_json' do
+      expect(@subject).to_not receive(:`)
+      expect(@subject).to receive(:cmd).with(valid_hcl_file, true)
+      @subject.to_json(valid_hcl_file)
     end
 
     it 'parses a HCL string into valid JSON' do
@@ -78,6 +90,53 @@ describe Json2hcl do
         expect { @subject.to_json(invalid_hcl_file) }.to raise_error Json2hcl::InvalidHCLError
         expect { @subject.to_json(valid_hcl_file) }.to_not raise_error
       end
+    end
+  end
+
+  describe '.cmd' do
+    it 'takes only one mandatory and one optional argument' do
+      aggregate_failures 'inputs for cmd' do
+        expect { @subject.cmd }.to raise_error ArgumentError
+        expect { @subject.cmd(valid_json_file) }.to_not raise_error
+        expect { @subject.cmd(valid_hcl_file, true) }.to_not raise_error
+        expect { @subject.cmd('', '', '') }.to raise_error ArgumentError
+      end
+    end
+
+    it 'raises ArgumentError if second parameter is not boolean' do
+      aggregate_failures 'boolean second argument of cmd' do
+        expect { @subject.cmd(valid_hcl_file, true) }.to_not raise_error
+        expect { @subject.cmd(valid_json_file, false) }.to_not raise_error
+        expect { @subject.cmd(valid_hcl_file, '') }.to raise_error ArgumentError
+        expect { @subject.cmd(valid_hcl_file, {}) }.to raise_error ArgumentError
+        expect { @subject.cmd(valid_hcl_file, []) }.to raise_error ArgumentError
+      end
+    end
+
+    it 'raises InvalidFileError if data parameter is not a file with full path' do
+      aggregate_failures 'full path to file as first parameter of cmd' do
+        expect { @subject.cmd(valid_json_file) }.to_not raise_error
+        expect { @subject.cmd(valid_hcl_file, true) }.to_not raise_error
+        expect { @subject.cmd(valid_json_file, false) }.to_not raise_error
+        expect { @subject.cmd('random_string') }.to raise_error ::Json2hcl::InvalidFileError
+        expect { @subject.cmd('random_string', false) }.to raise_error ::Json2hcl::InvalidFileError
+        expect { @subject.cmd('random_string', false) }.to raise_error ::Json2hcl::InvalidFileError
+        expect { @subject.cmd(__FILE__.gsub(/^\//, '')) }.to raise_error ::Json2hcl::InvalidFileError
+        expect { @subject.cmd(__FILE__.gsub(/^\//, ''), true) }.to raise_error ::Json2hcl::InvalidFileError
+        expect { @subject.cmd(__FILE__.gsub(/^\//, ''), false) }.to raise_error ::Json2hcl::InvalidFileError
+      end
+    end
+
+    it 'executes the binfile passing the data argument' do
+      cmd = "#{@file} -reverse 2>&1 < #{valid_hcl_file}"
+
+      expect(@subject).to receive(:`).once.with(cmd)
+      expect($?).to receive(:exitstatus).once.and_return(0)
+      @subject.cmd(valid_hcl_file, true)
+    end
+
+    it 'raises CommandExecutionError with exitstatus != 0' do
+      expect { @subject.cmd(invalid_hcl_file) }.to raise_error ::Json2hcl::CommandExecutionError
     end
   end
 end

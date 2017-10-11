@@ -31,4 +31,36 @@ describe 'Custom Exceptions' do
       end
     end
   end
+
+  describe Json2hcl::InvalidFileError do
+    include_examples 'default_exception_tests', described_class, 'Invalid path to file'
+
+    it 'should allow custom messages on raise' do
+      msg = 'Custom Message'
+      expect { raise described_class, msg }.to raise_error Json2hcl::InvalidFileError, msg
+    end
+
+    it 'should allow only zero or one parameter' do
+      aggregate_failures 'inputs for InvalidFileError' do
+        expect { described_class.new }.to_not raise_error
+        expect { described_class.new('p1') }.to_not raise_error
+        expect { described_class.new('p1', 'p2') }.to raise_error ArgumentError
+      end
+    end
+  end
+
+  describe Json2hcl::CommandExecutionError do
+    include_examples 'default_exception_tests', described_class, 'Command returned a non-zero status'
+
+    it 'should allow custom messages on raise' do
+      msg = 'Custom Message'
+      expect { raise described_class, msg }.to raise_error Json2hcl::CommandExecutionError, msg
+    end
+
+    it 'should allow only zero or one parameter' do
+      expect { described_class.new }.to_not raise_error
+      expect { described_class.new('p1') }.to_not raise_error
+      expect { described_class.new('p1', 'p2') }.to raise_error ArgumentError
+    end
+  end
 end

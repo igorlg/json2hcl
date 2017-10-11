@@ -66,16 +66,16 @@ describe Json2hcl do
 
     it 'parses a HCL string into valid JSON' do
       aggregate_failures 'HCL string into JSON for to_json' do
-        hclstr = @subject.to_json(valid_hcl_string)
-        expect { JSON.parse(hclstr) }.to_not raise_error
-        expect(JSON.load(hclstr)).to eq JSON.load(valid_json_string)
+        jsonstr = @subject.to_json(valid_hcl_string)
+        expect { JSON.parse(jsonstr) }.to_not raise_error
+        expect(JSON.load(jsonstr)).to eq JSON.load(valid_json_string)
       end
     end
 
     it 'parses a HCL File into valid JSON' do
-      hclstr = @subject.to_json(valid_hcl_file)
-      expect { JSON.parse(hclstr) }.to_not raise_error
-      expect(JSON.load(hclstr)).to eq JSON.load(valid_json_string)
+      jsonstr = @subject.to_json(valid_hcl_file)
+      expect { JSON.parse(jsonstr) }.to_not raise_error
+      expect(JSON.load(jsonstr)).to eq JSON.load(valid_json_string)
     end
 
     it 'raises InvalidHCLError on invalid HCL String' do
@@ -89,6 +89,60 @@ describe Json2hcl do
       aggregate_failures 'InvalidHCLError on File for to_json' do
         expect { @subject.to_json(invalid_hcl_file) }.to raise_error Json2hcl::InvalidHCLError
         expect { @subject.to_json(valid_hcl_file) }.to_not raise_error
+      end
+    end
+  end
+
+  describe '.to_hcl' do
+    it 'takes only one argument' do
+      aggregate_failures 'inputs for to_hcl' do
+        expect { @subject.to_hcl }.to raise_error ArgumentError
+        expect { @subject.to_hcl('{}') }.to_not raise_error
+        expect { @subject.to_hcl('{}', '') }.to raise_error ArgumentError
+      end
+    end
+
+    it 'calls Json2hcl.cmd instead of using `` when passing string to to_hcl' do
+      expect(@subject).to_not receive(:`)
+      expect(@subject).to receive(:cmd).with(anything, false)
+      @subject.to_hcl(valid_json_string)
+    end
+
+    it 'calls Json2hcl.cmd instead of using `` when passing file to to_hcl' do
+      expect(@subject).to_not receive(:`)
+      expect(@subject).to receive(:cmd).with(valid_json_file, false)
+      @subject.to_hcl(valid_json_file)
+    end
+
+    it 'parses a JSON string into valid HCL' do
+      aggregate_failures 'JSON string into HCL for to_hcl' do
+        hclstr = @subject.to_hcl(valid_json_string)
+        jsonstr = @subject.to_json(hclstr)
+        expect { JSON.load(jsonstr) }.to_not raise_error
+        expect(JSON.load(jsonstr)).to eq JSON.load(valid_json_string)
+      end
+    end
+
+    it 'parses a JSON File into valid HCL' do
+      aggregate_failures 'JSON string into HCL for to_hcl' do
+        hclstr = @subject.to_hcl(valid_json_file)
+        jsonstr = @subject.to_json(hclstr)
+        expect { JSON.load(jsonstr) }.to_not raise_error
+        expect(JSON.load(jsonstr)).to eq JSON.load(valid_json_string)
+      end
+    end
+
+    it 'raises InvalidJSONError on invalid JSON String' do
+      aggregate_failures 'InvalidHCLError on String for to_json' do
+        expect { @subject.to_hcl(invalid_json_string) }.to raise_error Json2hcl::InvalidJSONError
+        expect { @subject.to_hcl(valid_json_string) }.to_not raise_error
+      end
+    end
+
+    it 'raises InvalidJSONError on invalid JSON File' do
+      aggregate_failures 'InvalidHCLError on File for to_json' do
+        expect { @subject.to_hcl(invalid_json_file) }.to raise_error Json2hcl::InvalidJSONError
+        expect { @subject.to_hcl(valid_json_file) }.to_not raise_error
       end
     end
   end

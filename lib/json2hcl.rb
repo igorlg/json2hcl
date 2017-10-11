@@ -36,6 +36,30 @@ module Json2hcl
     return jsonstr
   end
 
+  def self.to_hcl(data)
+    if File.file?(data)
+      begin
+        hclstr = cmd(data, false)
+      rescue CommandExecutionError
+        raise InvalidJSONError
+      end
+    else
+      f = ::Tempfile.new
+      f.write(data)
+      f.close
+
+      begin
+        hclstr = cmd(f.path, false)
+      rescue CommandExecutionError
+        raise InvalidJSONError
+      ensure
+        f.unlink
+      end
+    end
+
+    return hclstr
+  end
+
   def self.cmd(data, reverse=false)
     raise ArgumentError     unless [true, false].include? reverse
     raise InvalidFileError  unless Pathname.new(data).absolute?

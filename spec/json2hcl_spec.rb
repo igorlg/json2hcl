@@ -11,7 +11,7 @@ describe Json2hcl do
     @os       = ::Json2hcl::OS.os
     @arch     = ::Json2hcl::OS.arch
     @version  = ::Json2hcl::VERSION
-    @file     = bin_file(@version, @os, @arch, @path)
+    @file     = bin_file(@os, @arch, @path)
 
     @subject  = ::Json2hcl
   end

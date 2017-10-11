@@ -1,7 +1,8 @@
 require 'bundler/setup'
 require 'json2hcl'
 
-def bin_file(ver,os,arch,path=nil)
+def bin_file(os,arch,path=nil)
+  ver = ::Json2hcl::VERSION
   file = "json2hcl_v#{ver}_#{os}_#{arch}"
   file += '.exe' if os == 'windows'
   return File.expand_path(file, path) unless path.nil?

@@ -1,0 +1,39 @@
+{
+  "key": [
+    {
+      "": [
+        {
+          "policy": "read"
+        }
+      ]
+    },
+    {
+      "foo/": [
+        {
+          "policy": "write"
+        }
+      ]
+    },
+    {
+      "foo/bar/": [
+        {
+          "policy": "read"
+        }
+      ]
+    },
+    {
+      "foo/bar/baz": [
+        {
+          "policy": "deny"
+        }
+      ]
+    }
+  ],
+  "output": [
+    {
+      "many": "${replace(var.sub_domain, \".\", \"\\.\")}",
+      "one": "${replace(var.sub_domain, \".\", \"\\.\")}",
+      "two": "${replace(var.sub_domain, \".\", \"\\.\")}"
+    }
+  ]
+}

@@ -10,9 +10,9 @@ RSpec.shared_examples 'json2hcl_os' do |os,arch,stubs|
       allow(::OS).to receive(:bits).and_return(stubs[:bits])
     end
 
-    let(:subject)   { Class.new { extend ::Json2hcl::OS } }
+    let(:subject)   { ::Json2hcl::OS }
+    let(:vesion)    { ::Json2hcl::VERSION }
     let(:bin_path)  { File.expand_path(File.join('..', '..', 'lib', 'json2hcl', 'bin'), __dir__) }
-    let(:vesion)    { Json2hcl::VERSION }
 
     it '.os should return "darwin"' do
       expect(subject.os).to eq os
